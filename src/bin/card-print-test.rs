@@ -2,7 +2,7 @@
 // Main
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-use seahaven::cards::{Card, NUM_RANKS, NUM_SUITS, Rank, Suit};
+use seahaven::cards::{Card, NUM_RANKS, NUM_SUITS};
 
 pub fn main() {
     for s in 0..NUM_SUITS {

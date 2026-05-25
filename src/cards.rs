@@ -8,6 +8,14 @@
 
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+const USE_COLOR: bool = false;
+
+// TODO: Once I get online pull down ansi_term
+// use ansi_term::{
+//     Color::{Black, Blue, Green, Red, Yellow},
+//     Style,
+// };
+
 pub const NUM_SUITS: u8 = 4;
 pub const NUM_RANKS: u8 = 13;
 pub const NUM_CARDS: u8 = NUM_SUITS * NUM_RANKS;
@@ -51,6 +59,19 @@ impl Suit {
                 "Suit value ({i}) is out of range [0 {LTE} i {LT} {NUM_CARDS}]"
             )),
         }
+    }
+}
+
+impl Display for Suit {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let c: u32 = match self {
+            Suit::Club => 0x2663,
+            Suit::Diamond => 0x2662,
+            Suit::Heart => 0x2661,
+            Suit::Spade => 0x2660,
+        };
+
+        write!(f, "{}", char::from_u32(c).unwrap())
     }
 }
 
@@ -130,6 +151,19 @@ impl Rank {
     }
 }
 
+impl Display for Rank {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            Rank::Ace => write!(f, "A"),
+            Rank::King => write!(f, "K"),
+            Rank::Queen => write!(f, "Q"),
+            Rank::Jack => write!(f, "J"),
+            Rank::C10 => write!(f, "T"),
+            _ => write!(f, "{}", self.index() + 2,),
+        }
+    }
+}
+
 // *********************************************************************************************************************
 // Card Definition
 // *********************************************************************************************************************
@@ -160,12 +194,23 @@ impl Card {
 
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let s = self.suit.display_index();
-        let r = self.rank.display_index();
+        // let s = self.suit.display_index();
+        // let r = self.rank.display_index();
 
-        let c: u32 = 0x1F0A1 + 0x10 * s + r;
+        // let c: u32 = 0x1F0A1 + 0x10 * s + r;
 
-        write!(f, "{}", char::from_u32(c).unwrap())
+        // write!(f, "{}", char::from_u32(c).unwrap())
+        if USE_COLOR {
+            let card_body = format!("{}:{}", self.rank, self.suit);
+            // let mut color = match self.suit {
+            //     Suit::Club => Black,
+            //     Suit::Spade => Black,
+            //     _ => Red,
+            // };
+            write!(f, "{card_body}")
+        } else {
+            write!(f, "{}:{}", self.rank, self.suit)
+        }
     }
 }
 
