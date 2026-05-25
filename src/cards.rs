@@ -6,9 +6,11 @@
 // Some Basic Constants
 // *********************************************************************************************************************
 
-const NUM_SUITS: u8 = 4;
-const NUM_RANKS: u8 = 13;
-const NUM_CARDS: u8 = NUM_SUITS * NUM_RANKS;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
+pub const NUM_SUITS: u8 = 4;
+pub const NUM_RANKS: u8 = 13;
+pub const NUM_CARDS: u8 = NUM_SUITS * NUM_RANKS;
 
 const LTE: &str = "\u{2264}";
 const LT: &str = "<";
@@ -35,6 +37,10 @@ impl Suit {
         }
     }
 
+    fn display_index(&self) -> u32 {
+        ((NUM_SUITS as u32) - 1) - self.index() as u32
+    }
+
     pub fn from_index(i: u8) -> Result<Suit, String> {
         match i {
             0 => Ok(Suit::Club),
@@ -59,6 +65,7 @@ pub enum Rank {
     C4,
     C5,
     C6,
+    C7,
     C8,
     C9,
     C10,
@@ -76,6 +83,7 @@ impl Rank {
             Rank::C4 => 2,
             Rank::C5 => 3,
             Rank::C6 => 4,
+            Rank::C7 => 5,
             Rank::C8 => 6,
             Rank::C9 => 7,
             Rank::C10 => 8,
@@ -86,6 +94,20 @@ impl Rank {
         }
     }
 
+    fn display_index(&self) -> u32 {
+        match self {
+            Rank::Ace => 0,
+            _ => {
+                let mut extra: u32 = 0;
+                if self.index() > Rank::Jack.index() {
+                    extra = 1;
+                }
+
+                1 + self.index() as u32 + extra
+            }
+        }
+    }
+
     pub fn from_index(i: u8) -> Result<Rank, String> {
         match i {
             0 => Ok(Rank::C2),
@@ -93,6 +115,7 @@ impl Rank {
             2 => Ok(Rank::C4),
             3 => Ok(Rank::C5),
             4 => Ok(Rank::C6),
+            5 => Ok(Rank::C7),
             6 => Ok(Rank::C8),
             7 => Ok(Rank::C9),
             8 => Ok(Rank::C10),
@@ -132,6 +155,17 @@ impl Card {
                 "Card value ({i}) is out of range [0 {LTE} i {LT} 52]"
             ))
         }
+    }
+}
+
+impl Display for Card {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let s = self.suit.display_index();
+        let r = self.rank.display_index();
+
+        let c: u32 = 0x1F0A1 + 0x10 * s + r;
+
+        write!(f, "{}", char::from_u32(c).unwrap())
     }
 }
 
