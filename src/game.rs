@@ -14,6 +14,7 @@ pub struct Stack {
 
 const NUM_FREE: u8 = 4;
 const NUM_COLS: u8 = 10;
+const NUM_ROWS: u8 = NUM_CARDS / NUM_COLS;
 
 #[derive(Clone, Debug)]
 pub struct Table {
@@ -31,7 +32,6 @@ pub enum Location {
 
 impl Table {
     pub fn from(deck: &mut Deck) -> Table {
-        let num_rows = NUM_CARDS / NUM_COLS;
         let mut table = Table {
             found: [0, 0, 0, 0],
             free: [None, None, None, None],
@@ -49,11 +49,14 @@ impl Table {
             ],
         };
 
-        for _ in 0..num_rows {
+        for _ in 0..NUM_ROWS {
             for c in 0..NUM_COLS {
                 table.blds[c as usize].push(deck.deal().unwrap());
             }
         }
+
+        table.free[1] = Some(deck.deal().unwrap());
+        table.free[2] = Some(deck.deal().unwrap());
 
         table
     }
@@ -191,6 +194,95 @@ impl Table {
                 }
             }
             _ => Some("Unknown Move".to_string()),
+        }
+    }
+
+    pub fn print(&self) {
+        println!(
+            "{} {}     {} {} {} {}     {} {}",
+            if self.found[0] == 0 {
+                format!("[{}]", Suit::Club)
+            } else {
+                format!(
+                    "{}",
+                    Card {
+                        rank: Rank::from_index(self.found[0] - 1).unwrap(),
+                        suit: Suit::Club
+                    }
+                )
+            },
+            if self.found[1] == 0 {
+                format!("[{}]", Suit::Diamond)
+            } else {
+                format!(
+                    "{}",
+                    Card {
+                        rank: Rank::from_index(self.found[1] - 1).unwrap(),
+                        suit: Suit::Diamond
+                    }
+                )
+            },
+            match &self.free[0] {
+                Some(c) => format!("{c}"),
+                None => "[ ]".to_string(),
+            },
+            match &self.free[1] {
+                Some(c) => format!("{c}"),
+                None => "[ ]".to_string(),
+            },
+            match &self.free[2] {
+                Some(c) => format!("{c}"),
+                None => "[ ]".to_string(),
+            },
+            match &self.free[3] {
+                Some(c) => format!("{c}"),
+                None => "[ ]".to_string(),
+            },
+            if self.found[2] == 0 {
+                format!("[{}]", Suit::Heart)
+            } else {
+                format!(
+                    "{}",
+                    Card {
+                        rank: Rank::from_index(self.found[2] - 1).unwrap(),
+                        suit: Suit::Heart
+                    }
+                )
+            },
+            if self.found[3] == 0 {
+                format!("[{}]", Suit::Spade)
+            } else {
+                format!(
+                    "{}",
+                    Card {
+                        rank: Rank::from_index(self.found[3] - 1).unwrap(),
+                        suit: Suit::Spade
+                    }
+                )
+            },
+        );
+
+        println!();
+
+        let mut all_done = false;
+        let mut current_row = 0;
+
+        while !all_done {
+            all_done = true;
+
+            for i in 0..NUM_COLS {
+                let col = &self.blds[i as usize];
+                if current_row < col.len() {
+                    print!("{} ", col[current_row]);
+                    all_done = false;
+                } else {
+                    print!("    ");
+                }
+            }
+
+            println!();
+
+            current_row = current_row + 1;
         }
     }
 }
