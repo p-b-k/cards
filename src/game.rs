@@ -2,5 +2,9 @@
 // Create the data structures for the seahaven game
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+use crate::cards::Card;
+
 #[derive(Clone, Debug)]
-pub struct Stack {}
+pub struct Stack {
+    pub cards: Vec<Card>,
+}

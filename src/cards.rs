@@ -8,13 +8,13 @@
 
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-const USE_COLOR: bool = false;
+const USE_COLOR: bool = true;
 
 // TODO: Once I get online pull down ansi_term
-// use ansi_term::{
-//     Color::{Black, Blue, Green, Red, Yellow},
-//     Style,
-// };
+use ansi_term::{
+    Color::{Black, Red, White},
+    Style,
+};
 
 pub const NUM_SUITS: u8 = 4;
 pub const NUM_RANKS: u8 = 13;
@@ -45,7 +45,7 @@ impl Suit {
         }
     }
 
-    fn display_index(&self) -> u32 {
+    fn _display_index(&self) -> u32 {
         ((NUM_SUITS as u32) - 1) - self.index() as u32
     }
 
@@ -66,8 +66,8 @@ impl Display for Suit {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let c: u32 = match self {
             Suit::Club => 0x2663,
-            Suit::Diamond => 0x2662,
-            Suit::Heart => 0x2661,
+            Suit::Diamond => 0x2666,
+            Suit::Heart => 0x2665,
             Suit::Spade => 0x2660,
         };
 
@@ -81,6 +81,7 @@ impl Display for Suit {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Rank {
+    Ace,
     C2,
     C3,
     C4,
@@ -93,57 +94,42 @@ pub enum Rank {
     Jack,
     Queen,
     King,
-    Ace,
 }
 
 impl Rank {
     pub fn index(&self) -> u8 {
         match self {
-            Rank::C2 => 0,
-            Rank::C3 => 1,
-            Rank::C4 => 2,
-            Rank::C5 => 3,
-            Rank::C6 => 4,
-            Rank::C7 => 5,
-            Rank::C8 => 6,
-            Rank::C9 => 7,
-            Rank::C10 => 8,
-            Rank::Jack => 9,
-            Rank::Queen => 10,
-            Rank::King => 11,
-            Rank::Ace => 12,
-        }
-    }
-
-    fn display_index(&self) -> u32 {
-        match self {
             Rank::Ace => 0,
-            _ => {
-                let mut extra: u32 = 0;
-                if self.index() > Rank::Jack.index() {
-                    extra = 1;
-                }
-
-                1 + self.index() as u32 + extra
-            }
+            Rank::C2 => 1,
+            Rank::C3 => 2,
+            Rank::C4 => 3,
+            Rank::C5 => 4,
+            Rank::C6 => 5,
+            Rank::C7 => 6,
+            Rank::C8 => 7,
+            Rank::C9 => 8,
+            Rank::C10 => 9,
+            Rank::Jack => 10,
+            Rank::Queen => 11,
+            Rank::King => 12,
         }
     }
 
     pub fn from_index(i: u8) -> Result<Rank, String> {
         match i {
-            0 => Ok(Rank::C2),
-            1 => Ok(Rank::C3),
-            2 => Ok(Rank::C4),
-            3 => Ok(Rank::C5),
-            4 => Ok(Rank::C6),
-            5 => Ok(Rank::C7),
-            6 => Ok(Rank::C8),
-            7 => Ok(Rank::C9),
-            8 => Ok(Rank::C10),
-            9 => Ok(Rank::Jack),
-            10 => Ok(Rank::Queen),
-            11 => Ok(Rank::King),
-            12 => Ok(Rank::Ace),
+            0 => Ok(Rank::Ace),
+            1 => Ok(Rank::C2),
+            2 => Ok(Rank::C3),
+            3 => Ok(Rank::C4),
+            4 => Ok(Rank::C5),
+            5 => Ok(Rank::C6),
+            6 => Ok(Rank::C7),
+            7 => Ok(Rank::C8),
+            8 => Ok(Rank::C9),
+            9 => Ok(Rank::C10),
+            10 => Ok(Rank::Jack),
+            11 => Ok(Rank::Queen),
+            12 => Ok(Rank::King),
             _ => Err(format!(
                 "Rank value ({i}) is out of range [0 {LTE} i {LT} {NUM_RANKS}]"
             )),
@@ -159,7 +145,7 @@ impl Display for Rank {
             Rank::Queen => write!(f, "Q"),
             Rank::Jack => write!(f, "J"),
             Rank::C10 => write!(f, "T"),
-            _ => write!(f, "{}", self.index() + 2,),
+            _ => write!(f, "{}", self.index() + 1,),
         }
     }
 }
@@ -202,12 +188,17 @@ impl Display for Card {
         // write!(f, "{}", char::from_u32(c).unwrap())
         if USE_COLOR {
             let card_body = format!("{}:{}", self.rank, self.suit);
-            // let mut color = match self.suit {
-            //     Suit::Club => Black,
-            //     Suit::Spade => Black,
-            //     _ => Red,
-            // };
-            write!(f, "{card_body}")
+            let color = match self.suit {
+                Suit::Club => Black,
+                Suit::Spade => Black,
+                _ => Red,
+            };
+            // write!(f, "{}", White. color.paint(card_body))
+            write!(
+                f,
+                "{}",
+                Style::new().bold().on(White).fg(color).paint(card_body)
+            )
         } else {
             write!(f, "{}:{}", self.rank, self.suit)
         }
