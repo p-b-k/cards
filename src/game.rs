@@ -8,3 +8,9 @@ use crate::cards::Card;
 pub struct Stack {
     pub cards: Vec<Card>,
 }
+
+pub struct Table {
+    pub found: [u8; 4],
+    pub free: [Card; 4],
+    pub build: [Vec<Card>; 10],
+}
