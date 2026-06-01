@@ -38,7 +38,7 @@ pub fn main() {
     terminal.draw(|f| {
         let size = f.size();
         let block = Block::default()
-            .title("Block")
+            .title("Table")
             .borders(Borders::ALL);
         f.render_widget(block, size);
     }).unwrap();
