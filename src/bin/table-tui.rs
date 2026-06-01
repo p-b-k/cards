@@ -2,6 +2,9 @@
 // Test printing a layout
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+use std::io;
+use tui::{backend::CrosstermBackend, Terminal};
+
 use seahaven::{deck::Deck, game::Table};
 
 pub fn main() {
@@ -12,5 +15,8 @@ pub fn main() {
     }
 
     let t = Table::from(&mut d);
-    t.print();
+
+    let stdout = io::stdout();
+    let backend = CrosstermBackend::new(stdout);
+    let mut term = Terminal::new(backend);
 }
