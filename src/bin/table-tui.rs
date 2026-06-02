@@ -5,16 +5,17 @@
 use std::{io, thread, time::Duration};
 
 use tui::{
+    Terminal,
     backend::CrosstermBackend,
-    widgets::{Widget, Block, Borders},
-    layout::{Layout, Constraint, Direction},
-    Terminal
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Style},
+    widgets::{Block, Borders, Widget},
 };
 
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 
 use seahaven::{deck::Deck, game::Table};
@@ -35,13 +36,16 @@ pub fn main() {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
 
-    terminal.draw(|f| {
-        let size = f.size();
-        let block = Block::default()
-            .title("Table")
-            .borders(Borders::ALL);
-        f.render_widget(block, size);
-    }).unwrap();
+    terminal
+        .draw(|f| {
+            let size = f.size();
+            let block = Block::default()
+                .title("Table")
+                .borders(Borders::ALL)
+                .style(Style::default().bg(Color::Rgb(0, (43), (0)));
+            f.render_widget(block, size);
+        })
+        .unwrap();
 
     thread::sleep(Duration::from_millis(5000));
 
@@ -51,6 +55,8 @@ pub fn main() {
         terminal.backend_mut(),
         LeaveAlternateScreen,
         DisableMouseCapture
-    ).unwrap();
+    )
+    .unwrap();
+
     terminal.show_cursor().unwrap();
 }
