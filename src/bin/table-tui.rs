@@ -6,7 +6,7 @@ use std::{io, thread, time::Duration};
 
 use tui::{
     backend::CrosstermBackend,
-    widgets::{Widget, Block, Borders},
+    widgets::{Widget, Block, Borders, BorderType},
     layout::{Layout, Constraint, Direction},
     Terminal
 };
@@ -39,7 +39,7 @@ pub fn main() {
         let size = f.size();
         let block = Block::default()
             .title("Table")
-            .borders(Borders::ALL);
+            .borders(Borders::ALL).border_type(BorderType::Rounded);
         f.render_widget(block, size);
     }).unwrap();
 
