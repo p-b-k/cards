@@ -5,6 +5,7 @@
 pub mod cards;
 pub mod deck;
 pub mod game;
+pub mod tui;
 
 // #[cfg(test)]
 // mod tests {
