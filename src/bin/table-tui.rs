@@ -13,65 +13,17 @@ use tui::{
     Terminal,
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout},
-    layout::{Constraint, Direction, Layout},
-    style::Style,
     style::{Color, Modifier, Style},
-    style::{Color, Style},
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, ListState, Paragraph, Table, Tabs, Widget},
-    widgets::{Block, BorderType, Borders, Widget},
-    widgets::{Block, Borders, Widget},
+    widgets::{Block, BorderType, Borders, Paragraph, Tabs},
 };
 
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event as CEvent, KeyCode},
-    execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    event::{self, Event as CEvent, KeyCode},
+    terminal::{disable_raw_mode, enable_raw_mode},
 };
 
 use seahaven::{deck::Deck, game::Table as Tableau};
-
-// pub fn main() {
-//     let mut d = Deck::new();
-
-//     for _ in 0..100 {
-//         d.shuffle();
-//     }
-
-//     let t = Tableau::from(&mut d);
-
-//     // Set up terminal
-//     enable_raw_mode().unwrap();
-//     let mut stdout = io::stdout();
-//     execute!(stdout, EnterAlternateScreen, EnableMouseCapture).unwrap();
-//     let backend = CrosstermBackend::new(stdout);
-//     let mut terminal = Terminal::new(backend).unwrap();
-
-//     terminal
-//         .draw(|f| {
-//             let size = f.size();
-//             let block = Block::default()
-//                 .title("Table")
-//                 .style(Style::default().bg(Color::Rgb(0, 43, 0)))
-//                 .borders(Borders::ALL)
-//                 .border_type(BorderType::Rounded);
-//             f.render_widget(block, size);
-//         })
-//         .unwrap();
-
-//     thread::sleep(Duration::from_millis(5000));
-
-//     // restore terminal
-//     disable_raw_mode().unwrap();
-//     execute!(
-//         terminal.backend_mut(),
-//         LeaveAlternateScreen,
-//         DisableMouseCapture
-//     )
-//     .unwrap();
-
-//     terminal.show_cursor().unwrap();
-// }
 
 enum Event<I> {
     Input(I),
@@ -125,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let size = rect.size();
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .margin(2)
+                .margin(0)
                 .constraints(
                     [
                         Constraint::Length(3),
@@ -136,15 +88,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .split(size);
 
-            let copyright = Paragraph::new("Seahaven Towers")
-                .style(Style::default().fg(Color::LightCyan))
+            let tableau = Paragraph::new("Seahaven Towers")
+                .style(Style::default().fg(Color::Yellow))
+                .style(Style::default().bg(Color::Rgb(0, 43, 0)))
                 .alignment(Alignment::Center)
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
                         .style(Style::default().fg(Color::White))
-                        .title("Copyright")
-                        .border_type(BorderType::Plain),
+                        .title("Tableau")
+                        .border_type(BorderType::Rounded),
                 );
 
             let menu = menu_titles
@@ -164,20 +117,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .collect();
 
             let tabs = Tabs::new(menu)
-                .block(Block::default().title("Actions").borders(Borders::ALL))
+                .block(Block::default().borders(Borders::NONE))
                 .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default().fg(Color::Yellow))
                 .divider(Span::raw("|"));
 
             rect.render_widget(tabs, chunks[0]);
-            let pets_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
-                .split(chunks[1]);
-            let (left, right) = render_pets(&deck);
-            rect.render_stateful_widget(left, pets_chunks[0], &mut pet_list_state);
-            rect.render_widget(right, pets_chunks[1]);
-            rect.render_widget(copyright, chunks[2]);
+            // let pets_chunks = Layout::default()
+            //     .direction(Direction::Horizontal)
+            //     .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
+            //     .split(chunks[1]);
+            // let (left, right) = render_pets(&deck);
+            // rect.render_stateful_widget(left, pets_chunks[0], &mut pet_list_state);
+            // rect.render_widget(right, pets_chunks[1]);
+            rect.render_widget(tableau, chunks[1]);
         })?;
 
         match rx.recv()? {
@@ -187,34 +140,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     terminal.show_cursor()?;
                     break;
                 }
-                KeyCode::Char('h') => active_menu_item = MenuItem::Home,
-                KeyCode::Char('p') => active_menu_item = MenuItem::Pets,
-                KeyCode::Char('a') => {
-                    add_random_pet_to_db().expect("can add new random pet");
-                }
-                KeyCode::Char('d') => {
-                    remove_pet_at_index(&mut pet_list_state).expect("can remove pet");
-                }
-                KeyCode::Down => {
-                    if let Some(selected) = pet_list_state.selected() {
-                        let amount_pets = read_db().expect("can fetch pet list").len();
-                        if selected >= amount_pets - 1 {
-                            pet_list_state.select(Some(0));
-                        } else {
-                            pet_list_state.select(Some(selected + 1));
-                        }
-                    }
-                }
-                KeyCode::Up => {
-                    if let Some(selected) = pet_list_state.selected() {
-                        let amount_pets = read_db().expect("can fetch pet list").len();
-                        if selected > 0 {
-                            pet_list_state.select(Some(selected - 1));
-                        } else {
-                            pet_list_state.select(Some(amount_pets - 1));
-                        }
-                    }
-                }
+
+                // KeyCode::Char('h') => active_menu_item = MenuItem::Home,
+                // KeyCode::Char('p') => active_menu_item = MenuItem::Pets,
+                // KeyCode::Char('a') => {
+                //     add_random_pet_to_db().expect("can add new random pet");
+                // }
+                // KeyCode::Char('d') => {
+                //     remove_pet_at_index(&mut pet_list_state).expect("can remove pet");
+                // }
+                // KeyCode::Down => {
+                //     if let Some(selected) = pet_list_state.selected() {
+                //         let amount_pets = read_db().expect("can fetch pet list").len();
+                //         if selected >= amount_pets - 1 {
+                //             pet_list_state.select(Some(0));
+                //         } else {
+                //             pet_list_state.select(Some(selected + 1));
+                //         }
+                //     }
+                // }
+                // KeyCode::Up => {
+                //     if let Some(selected) = pet_list_state.selected() {
+                //         let amount_pets = read_db().expect("can fetch pet list").len();
+                //         if selected > 0 {
+                //             pet_list_state.select(Some(selected - 1));
+                //         } else {
+                //             pet_list_state.select(Some(amount_pets - 1));
+                //         }
+                //     }
+                // }
                 _ => {}
             },
             Event::Tick => {}
@@ -224,72 +178,72 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn render_pets<'a>(tableau: &Tableau) {
-    let pets = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White))
-        .title("Pets")
-        .border_type(BorderType::Plain);
+// fn render_pets<'a>(tableau: &Tableau) {
+//     let pets = Block::default()
+//         .borders(Borders::ALL)
+//         .style(Style::default().fg(Color::White))
+//         .title("Pets")
+//         .border_type(BorderType::Plain);
 
-    let selected_pet = pet_list
-        .get(
-            pet_list_state
-                .selected()
-                .expect("there is always a selected pet"),
-        )
-        .expect("exists")
-        .clone();
+//     let selected_pet = pet_list
+//         .get(
+//             pet_list_state
+//                 .selected()
+//                 .expect("there is always a selected pet"),
+//         )
+//         .expect("exists")
+//         .clone();
 
-    let list = List::new(items).block(pets).highlight_style(
-        Style::default()
-            .bg(Color::Yellow)
-            .fg(Color::Black)
-            .add_modifier(Modifier::BOLD),
-    );
+//     let list = List::new(items).block(pets).highlight_style(
+//         Style::default()
+//             .bg(Color::Yellow)
+//             .fg(Color::Black)
+//             .add_modifier(Modifier::BOLD),
+//     );
 
-    let pet_detail = Table::new(vec![Row::new(vec![
-        Cell::from(Span::raw(selected_pet.id.to_string())),
-        Cell::from(Span::raw(selected_pet.name)),
-        Cell::from(Span::raw(selected_pet.category)),
-        Cell::from(Span::raw(selected_pet.age.to_string())),
-        Cell::from(Span::raw(selected_pet.created_at.to_string())),
-    ])])
-    .header(Row::new(vec![
-        Cell::from(Span::styled(
-            "ID",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Cell::from(Span::styled(
-            "Name",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Cell::from(Span::styled(
-            "Category",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Cell::from(Span::styled(
-            "Age",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Cell::from(Span::styled(
-            "Created At",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-    ]))
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .title("Detail")
-            .border_type(BorderType::Plain),
-    )
-    .widths(&[
-        Constraint::Percentage(5),
-        Constraint::Percentage(20),
-        Constraint::Percentage(20),
-        Constraint::Percentage(5),
-        Constraint::Percentage(20),
-    ]);
+//     let pet_detail = Table::new(vec![Row::new(vec![
+//         Cell::from(Span::raw(selected_pet.id.to_string())),
+//         Cell::from(Span::raw(selected_pet.name)),
+//         Cell::from(Span::raw(selected_pet.category)),
+//         Cell::from(Span::raw(selected_pet.age.to_string())),
+//         Cell::from(Span::raw(selected_pet.created_at.to_string())),
+//     ])])
+//     .header(Row::new(vec![
+//         Cell::from(Span::styled(
+//             "ID",
+//             Style::default().add_modifier(Modifier::BOLD),
+//         )),
+//         Cell::from(Span::styled(
+//             "Name",
+//             Style::default().add_modifier(Modifier::BOLD),
+//         )),
+//         Cell::from(Span::styled(
+//             "Category",
+//             Style::default().add_modifier(Modifier::BOLD),
+//         )),
+//         Cell::from(Span::styled(
+//             "Age",
+//             Style::default().add_modifier(Modifier::BOLD),
+//         )),
+//         Cell::from(Span::styled(
+//             "Created At",
+//             Style::default().add_modifier(Modifier::BOLD),
+//         )),
+//     ]))
+//     .block(
+//         Block::default()
+//             .borders(Borders::ALL)
+//             .style(Style::default().fg(Color::White))
+//             .title("Detail")
+//             .border_type(BorderType::Plain),
+//     )
+//     .widths(&[
+//         Constraint::Percentage(5),
+//         Constraint::Percentage(20),
+//         Constraint::Percentage(20),
+//         Constraint::Percentage(5),
+//         Constraint::Percentage(20),
+//     ]);
 
-    (list, pet_detail)
-}
+//     (list, pet_detail)
+// }
