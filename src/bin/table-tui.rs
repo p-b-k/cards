@@ -6,10 +6,16 @@ use std::{io, thread, time::Duration};
 
 use tui::{
     Terminal,
-    backend::CrosstermBackend,
+    backend::CrosstermBackend, style::Style,
+<<<<<<< HEAD
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     widgets::{Block, Borders, Widget},
+=======
+    widgets::{Widget, Block, Borders, BorderType},
+    layout::{Layout, Constraint, Direction},
+    Terminal
+>>>>>>> 54ce27455fd6d836f7e3aaebb041b0c681b1a2b3
 };
 
 use crossterm::{
@@ -36,16 +42,14 @@ pub fn main() {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
 
-    terminal
-        .draw(|f| {
-            let size = f.size();
-            let block = Block::default()
-                .title("Table")
-                .borders(Borders::ALL)
-                .style(Style::default().bg(Color::Rgb(0, (43), (0)));
-            f.render_widget(block, size);
-        })
-        .unwrap();
+    terminal.draw(|f| {
+        let size = f.size();
+        let block = Block::default()
+            .style(Style::default().bg(Color::Rgb(0, (43), (0))))
+            .title("Table")
+            .borders(Borders::ALL).border_type(BorderType::Rounded);
+        f.render_widget(block, size);
+    }).unwrap();
 
     thread::sleep(Duration::from_millis(5000));
 
