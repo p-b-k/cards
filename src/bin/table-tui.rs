@@ -13,9 +13,14 @@ use tui::{
     Terminal,
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout},
+    style::Style,
     style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, ListState, Paragraph, Table, Tabs, Widget},
+    widgets::{Block, BorderType, Borders, Widget},
+    widgets::{Block, Borders, Widget},
 };
 
 use crossterm::{
