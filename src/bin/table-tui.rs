@@ -12,10 +12,10 @@ use std::{
 use tui::{
     Terminal,
     backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, Paragraph, Tabs},
+    widgets::{Block, Borders, Paragraph, Tabs},
 };
 
 use crossterm::{
@@ -23,7 +23,11 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 
-use seahaven::{deck::Deck, game::Table as Tableau};
+use seahaven::{
+    deck::Deck,
+    game::Table as GTable,
+    tui::tableau::{Tableau, TableauWidget},
+};
 
 enum Event<I> {
     Input(I),
@@ -35,10 +39,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut deck = Deck::new();
 
     for _ in 0..100 {
-        deck.shuffle();
+        deck.shuffle_once();
     }
 
-    let t = Tableau::from(&mut deck);
+    let t = GTable::from(&mut deck);
 
     enable_raw_mode().expect("can run in raw mode");
 
@@ -80,49 +84,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .margin(0)
                 .constraints(
                     [
-                        Constraint::Length(3),
+                        Constraint::Length(32),
                         Constraint::Min(2),
-                        Constraint::Length(3),
+                        Constraint::Length(1),
+                        Constraint::Min(1),
                     ]
                     .as_ref(),
                 )
                 .split(size);
 
-            let tableau = Paragraph::new("Seahaven Towers")
-                .style(Style::default().fg(Color::Yellow))
-                .style(Style::default().bg(Color::Rgb(0, 43, 0)))
-                .alignment(Alignment::Center)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .style(Style::default().fg(Color::White))
-                        .title("Tableau")
-                        .border_type(BorderType::Rounded),
-                );
+            // let p = Paragraph::new("hello").block(Block::default());
 
-            let menu = menu_titles
-                .iter()
-                .map(|t| {
-                    let (first, rest) = t.split_at(1);
-                    Spans::from(vec![
-                        Span::styled(
-                            first,
-                            Style::default()
-                                .fg(Color::Yellow)
-                                .add_modifier(Modifier::UNDERLINED),
-                        ),
-                        Span::styled(rest, Style::default().fg(Color::White)),
-                    ])
-                })
-                .collect();
+            let mut tableau = Tableau::new(&mut deck);
 
-            let tabs = Tabs::new(menu)
-                .block(Block::default().borders(Borders::NONE))
-                .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().fg(Color::Yellow))
-                .divider(Span::raw("|"));
+            // let menu = menu_titles
+            //     .iter()
+            //     .map(|t| {
+            //         let (first, rest) = t.split_at(1);
+            //         Spans::from(vec![
+            //             Span::styled(
+            //                 first,
+            //                 Style::default()
+            //                     .fg(Color::Yellow)
+            //                     .add_modifier(Modifier::UNDERLINED),
+            //             ),
+            //             Span::styled(rest, Style::default().fg(Color::White)),
+            //         ])
+            //     })
+            //     .collect();
 
-            rect.render_widget(tabs, chunks[0]);
+            // let tabs = Tabs::new(menu)
+            //     .block(Block::default().borders(Borders::NONE))
+            //     .style(Style::default().fg(Color::White))
+            //     .highlight_style(Style::default().fg(Color::Yellow))
+            //     .divider(Span::raw("|"));
+
+            // rect.render_widget(tabs, chunks[0]);
             // let pets_chunks = Layout::default()
             //     .direction(Direction::Horizontal)
             //     .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
@@ -130,7 +127,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // let (left, right) = render_pets(&deck);
             // rect.render_stateful_widget(left, pets_chunks[0], &mut pet_list_state);
             // rect.render_widget(right, pets_chunks[1]);
-            rect.render_widget(tableau, chunks[1]);
+            let tab_widget = TableauWidget {};
+            rect.render_stateful_widget(tab_widget, chunks[1], &mut tableau);
         })?;
 
         match rx.recv()? {

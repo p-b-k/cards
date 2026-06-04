@@ -12,9 +12,9 @@ pub struct Stack {
     pub cards: Vec<Card>,
 }
 
-const NUM_FREE: u8 = 4;
-const NUM_COLS: u8 = 10;
-const NUM_ROWS: u8 = NUM_CARDS / NUM_COLS;
+pub const NUM_FREE: u8 = 4;
+pub const NUM_COLS: u8 = 10;
+pub const NUM_ROWS: u8 = NUM_CARDS / NUM_COLS;
 
 #[derive(Clone, Debug)]
 pub struct Table {

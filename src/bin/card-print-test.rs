@@ -10,13 +10,13 @@ use seahaven::{
 pub fn main() {
     let mut d = Deck::new();
 
-    d.shuffle()
-        .shuffle()
-        .shuffle()
-        .shuffle()
-        .shuffle()
-        .shuffle()
-        .shuffle();
+    d.shuffle_once()
+        .shuffle_once()
+        .shuffle_once()
+        .shuffle_once()
+        .shuffle_once()
+        .shuffle_once()
+        .shuffle_once();
 
     for s in 0..NUM_SUITS {
         for r in 0..NUM_RANKS {

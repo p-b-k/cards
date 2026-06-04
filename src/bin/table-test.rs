@@ -8,7 +8,7 @@ pub fn main() {
     let mut d = Deck::new();
 
     for _ in 0..100 {
-        d.shuffle();
+        d.shuffle_once();
     }
 
     let t = Table::from(&mut d);

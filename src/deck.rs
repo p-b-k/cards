@@ -35,7 +35,15 @@ impl Deck {
         }
     }
 
-    pub fn shuffle(&mut self) -> &mut Deck {
+    pub fn shuffle(&mut self, times: usize) -> &mut Deck {
+        for _ in 0..times {
+            self.shuffle_once();
+        }
+
+        self
+    }
+
+    pub fn shuffle_once(&mut self) -> &mut Deck {
         let mut l: Vec<u8> = Vec::new();
         let mut r: Vec<u8> = Vec::new();
 
