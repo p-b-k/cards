@@ -60,6 +60,15 @@ impl Suit {
             )),
         }
     }
+
+    pub fn as_char(&self) -> char {
+        match self {
+            Suit::Spade => char::from_u32(0x2660).expect("Couldn't get Spade char"),
+            Suit::Heart => char::from_u32(0x2665).expect("Couldn't get Heart char"),
+            Suit::Diamond => char::from_u32(0x2666).expect("Couldn't get Diamond char"),
+            Suit::Club => char::from_u32(0x2663).expect("Couldn't get Club char"),
+        }
+    }
 }
 
 impl Display for Suit {
