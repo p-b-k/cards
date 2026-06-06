@@ -54,16 +54,36 @@ enum DrawResult {
     Err(String),
 }
 
+const FREE_INDICATOR_CHARS: [char; 3] = [
+    ' ',
+    char::from_u32(0x25c9).expect("Unable to get indicator char"),
+    ' ',
+];
+
+const BOARD_INDICATOR_CHARS: [char; 3] = [
+    ' ',
+    char::from_u32(0x25c9).expect("Unable to get indicator char"),
+    ' ',
+];
+
 fn bg_color() -> Color {
     Color::Rgb(0x33, 0xA3, 0x48)
 }
 
 fn fg_color() -> Color {
-    Color::Rgb(0xf0, 0xe4, 0)
+    Color::Rgb(0xd0, 0xc4, 0x33)
+}
+
+fn dl_color() -> Color {
+    Color::Rgb(0xdf, 0x83, 0x12)
 }
 
 fn hl_color() -> Color {
-    Color::Rgb(0xFF, 0, 0)
+    Color::Rgb(0xFF, 0xe0, 0x12)
+}
+
+fn cr_color() -> Color {
+    Color::Rgb(0xf3, 0x30, 0x22)
 }
 
 impl StatefulWidget for TableauWidget {
@@ -253,7 +273,7 @@ fn draw_build_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> Draw
 fn draw_hrule_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
     let row = BOARD_MARGIN_TOP + 2;
     let border_char = char::from_u32(0x2501).expect("Unable to get HR char");
-    let mut style = Style::default().bg(bg_color()).fg(fg_color());
+    let mut style = Style::default().bg(bg_color()).fg(dl_color());
     let mut cursor: Option<u16> = None;
 
     match state.mode {
@@ -274,12 +294,19 @@ fn draw_hrule_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> Draw
     match cursor {
         Some(i) => {
             debug!("Builders: Cursor = {i}");
+            let style = Style::default().fg(cr_color());
             buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN), row)
-                .set_char(' ');
+                .set_char(BOARD_INDICATOR_CHARS[0]);
+            buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN), row)
+                .set_style(style);
             buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN) + 1, row)
-                .set_char(' ');
+                .set_char(BOARD_INDICATOR_CHARS[1]);
+            buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN + 1), row)
+                .set_style(style);
             buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN) + 2, row)
-                .set_char(' ');
+                .set_char(BOARD_INDICATOR_CHARS[2]);
+            buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN + 2), row)
+                .set_style(style);
         }
         None => {}
     }
@@ -290,7 +317,7 @@ fn draw_hrule_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> Draw
 fn draw_free_border_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
     let row = BOARD_MARGIN_TOP + 1;
     let border_char = char::from_u32(0x2501).expect("Unable to get HR char");
-    let mut style = Style::default().bg(bg_color()).fg(fg_color());
+    let mut style = Style::default().bg(bg_color()).fg(dl_color());
     let mut cursor: Option<u16> = None;
 
     match state.mode {
@@ -312,18 +339,32 @@ fn draw_free_border_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -
     match cursor {
         Some(i) => {
             debug!("Free: Cursor = {i}");
+            let style = Style::default().fg(cr_color());
+
             buff.get_mut(BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN), row)
-                .set_char(' ');
+                .set_char(FREE_INDICATOR_CHARS[0]);
+            buff.get_mut(BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN), row)
+                .set_style(style);
             buff.get_mut(
                 BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN) + 1,
                 row,
             )
-            .set_char(' ');
+            .set_char(FREE_INDICATOR_CHARS[1]);
+            buff.get_mut(
+                BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN) + 1,
+                row,
+            )
+            .set_style(style);
             buff.get_mut(
                 BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN) + 2,
                 row,
             )
-            .set_char(' ');
+            .set_char(FREE_INDICATOR_CHARS[2]);
+            buff.get_mut(
+                BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN) + 2,
+                row,
+            )
+            .set_style(style);
         }
         None => {}
     }

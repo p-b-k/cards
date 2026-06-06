@@ -22,7 +22,8 @@ use crossterm::{
 
 use seahaven::{
     deck::Deck,
-    tui::tableau::{Tableau, TableauWidget},
+    game::{NUM_COLS, NUM_FREE},
+    tui::tableau::{Mode, Tableau, TableauWidget},
 };
 
 enum Event<I> {
@@ -44,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start setting up input mode and channels
     enable_raw_mode().expect("can run in raw mode");
     let (tx, rx) = mpsc::channel();
-    let tick_rate = Duration::from_millis(200);
+    let tick_rate = Duration::from_millis(2000);
 
     // Spawn the input loop
     thread::spawn(move || {
@@ -104,7 +105,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     break;
                 }
 
-                // KeyCode::Char('h') => active_menu_item = MenuItem::Home,
+                KeyCode::Char('h') => match tableau.mode {
+                    Mode::Free(i) => {
+                        if i > 0 {
+                            tableau.mode = Mode::Free(i - 1);
+                        }
+                    }
+                    Mode::Build(i) => {
+                        if i > 0 {
+                            tableau.mode = Mode::Build(i - 1);
+                        }
+                    }
+                },
+
+                KeyCode::Char('l') => match tableau.mode {
+                    Mode::Free(i) => {
+                        if i < (NUM_FREE as u8 - 1) {
+                            tableau.mode = Mode::Free(i + 1);
+                        }
+                    }
+                    Mode::Build(i) => {
+                        if i < (NUM_COLS as u8 - 1) {
+                            tableau.mode = Mode::Build(i + 1);
+                        }
+                    }
+                },
+
+                KeyCode::Char('j') => match tableau.mode {
+                    Mode::Free(i) => {
+                        tableau.mode = Mode::Build(3 + i);
+                    }
+                    _ => {}
+                },
+
+                KeyCode::Char('k') => match tableau.mode {
+                    Mode::Build(i) => {
+                        if i < 3 {
+                            tableau.mode = Mode::Free(0);
+                        } else if i > 7 {
+                            tableau.mode = Mode::Free(3);
+                        } else {
+                            tableau.mode = Mode::Free(i - 3);
+                        }
+                    }
+                    _ => {}
+                },
+
                 // KeyCode::Char('p') => active_menu_item = MenuItem::Pets,
                 // KeyCode::Char('a') => {
                 //     add_random_pet_to_db().expect("can add new random pet");
