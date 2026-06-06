@@ -2,7 +2,7 @@
 // Seahaven Tableeau TUI
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-use log::error;
+use log::{debug, error};
 use tui::{
     buffer::Buffer,
     layout::Rect,
@@ -54,19 +54,36 @@ enum DrawResult {
     Err(String),
 }
 
+fn bg_color() -> Color {
+    Color::Rgb(0x33, 0xA3, 0x48)
+}
+
+fn fg_color() -> Color {
+    Color::Rgb(0xf0, 0xe4, 0)
+}
+
+fn hl_color() -> Color {
+    Color::Rgb(0xFF, 0, 0)
+}
+
 impl StatefulWidget for TableauWidget {
     type State = Tableau;
 
     fn render(self, area: Rect, buff: &mut Buffer, state: &mut Self::State) {
+        debug!("Render: Mode = {:?}", state.mode);
         // Set bg
         let default_style = Style::default()
-            .bg(Color::Rgb(0, 43, 0))
-            .fg(Color::Rgb(0xf0, 0xe4, 0))
+            .bg(bg_color())
+            .fg(fg_color())
             .add_modifier(Modifier::BOLD);
 
-        for r in 0..area.height {
-            for c in 0..(BOARD_MARGIN_LEFT + (NUM_COLS * CARD_SPAN) + BOARD_MARGIN_RIGHT) {
-                buff.get_mut(c, r).set_style(default_style);
+        let tab_height =
+            BOARD_MARGIN_BOTTOM + BOARD_MARGIN_TOP + 4 as u16 + state.tab.max_build() as u16;
+
+        for r in 0..tab_height {
+            for c in 0..(BOARD_MARGIN_LEFT + (NUM_COLS * CARD_SPAN) + BOARD_MARGIN_RIGHT - CARD_GAP)
+            {
+                buff.get_mut(c, r as u16).set_style(default_style);
             }
         }
 
@@ -177,19 +194,20 @@ fn draw_card_at(
     DrawResult::Ok
 }
 
-fn draw_free_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+fn draw_free_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
     for i in 0..NUM_FREE {
-        let row = BOARD_MARGIN_TOP + 1;
+        let row = BOARD_MARGIN_TOP;
         let col = BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i as u16 * CARD_SPAN);
 
         draw_card_at(buff, &state.tab.free[i as usize], row, col, "[ ]");
     }
     DrawResult::Ok
 }
-fn draw_found_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+
+fn draw_found_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
     for s in 0..NUM_SUITS {
         let cnt = if s < 2 { 0 } else { 6 };
-        let row = BOARD_MARGIN_TOP + 1;
+        let row = BOARD_MARGIN_TOP;
         let col = BOARD_MARGIN_LEFT + ((s + cnt) * CARD_SPAN);
 
         if state.tab.found[s as usize] > 0 {
@@ -197,24 +215,122 @@ fn draw_found_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawR
                 .expect("Unable to get card from index");
             draw_card_at(buff, &Some(c), row, col, "***");
         } else {
+            let suit = Suit::from_index(s as u8).unwrap();
+            let suit_color = match suit {
+                Suit::Club => Color::Black,
+                Suit::Spade => Color::Black,
+                _ => Color::Red,
+            };
             buff.get_mut(col, row).set_char('[');
+            buff.get_mut(col + 1, row).set_char(suit.as_char());
             buff.get_mut(col + 1, row)
-                .set_char(Suit::from_index(s as u8).unwrap().as_char());
+                .set_style(Style::default().bg(bg_color()).fg(suit_color));
             buff.get_mut(col + 2, row).set_char(']');
         }
     }
 
-    DrawResult::Err("draw_found_cells: Not Implemented".to_string())
+    DrawResult::Ok
 }
-fn draw_build_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
-    DrawResult::Err("draw_build_cells: Not Implemented".to_string())
+
+fn draw_build_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+    for column in 0..NUM_COLS {
+        for c in 0..state.tab.blds[column as usize].len() {
+            let row = BOARD_MARGIN_TOP + 3 as u16 + c as u16;
+            let col = BOARD_MARGIN_LEFT + (column * CARD_SPAN);
+            draw_card_at(
+                buff,
+                &Some(state.tab.blds[column as usize][c].clone()),
+                row,
+                col,
+                "    ",
+            );
+        }
+    }
+
+    DrawResult::Ok
 }
-fn draw_hrule_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
-    DrawResult::Err("draw_hrule_cells: Not Implemented".to_string())
+
+fn draw_hrule_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+    let row = BOARD_MARGIN_TOP + 2;
+    let border_char = char::from_u32(0x2501).expect("Unable to get HR char");
+    let mut style = Style::default().bg(bg_color()).fg(fg_color());
+    let mut cursor: Option<u16> = None;
+
+    match state.mode {
+        Mode::Build(i) => {
+            // style.fg(hl_color());
+            style = Style::default().bg(bg_color()).fg(hl_color());
+            cursor = Some(i as u16);
+        }
+        _ => {}
+    }
+
+    for i in 0..((NUM_COLS * CARD_SPAN) - CARD_GAP) {
+        buff.get_mut(BOARD_MARGIN_LEFT + i, row).set_style(style);
+        buff.get_mut(BOARD_MARGIN_LEFT + i, row)
+            .set_char(border_char);
+    }
+
+    match cursor {
+        Some(i) => {
+            debug!("Builders: Cursor = {i}");
+            buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN), row)
+                .set_char(' ');
+            buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN) + 1, row)
+                .set_char(' ');
+            buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN) + 2, row)
+                .set_char(' ');
+        }
+        None => {}
+    }
+
+    DrawResult::Ok
 }
-fn draw_free_border_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
-    DrawResult::Err("draw_free_border_cells: Not Implemented".to_string())
+
+fn draw_free_border_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+    let row = BOARD_MARGIN_TOP + 1;
+    let border_char = char::from_u32(0x2501).expect("Unable to get HR char");
+    let mut style = Style::default().bg(bg_color()).fg(fg_color());
+    let mut cursor: Option<u16> = None;
+
+    match state.mode {
+        Mode::Free(i) => {
+            // style.fg(hl_color());
+            style = Style::default().bg(bg_color()).fg(hl_color());
+            cursor = Some(i as u16);
+        }
+        _ => {}
+    }
+
+    for i in 0..((NUM_FREE * CARD_SPAN) - CARD_GAP) {
+        buff.get_mut(BOARD_MARGIN_LEFT + (CARD_SPAN * 3) + i, row)
+            .set_style(style);
+        buff.get_mut(BOARD_MARGIN_LEFT + (CARD_SPAN * 3) + i, row)
+            .set_char(border_char);
+    }
+
+    match cursor {
+        Some(i) => {
+            debug!("Free: Cursor = {i}");
+            buff.get_mut(BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN), row)
+                .set_char(' ');
+            buff.get_mut(
+                BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN) + 1,
+                row,
+            )
+            .set_char(' ');
+            buff.get_mut(
+                BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN) + 2,
+                row,
+            )
+            .set_char(' ');
+        }
+        None => {}
+    }
+
+    DrawResult::Ok
 }
-fn draw_table_border_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+
+fn draw_table_border_cells(_area: Rect, _buff: &mut Buffer, _state: &mut Tableau) -> DrawResult {
     DrawResult::Err("draw_table_border_cells: Not Implemented".to_string())
 }

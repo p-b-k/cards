@@ -2,8 +2,6 @@
 // Create the data structures for the seahaven game
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-use log::debug;
-
 use crate::{
     cards::{Card, NUM_CARDS, NUM_SUITS, Rank, Suit},
     deck::Deck,
@@ -51,7 +49,7 @@ impl Table {
             ],
         };
 
-        for r in 0..NUM_ROWS {
+        for _ in 0..NUM_ROWS {
             for c in 0..NUM_COLS {
                 table.blds[c as usize].push(deck.deal().unwrap());
             }
@@ -63,6 +61,18 @@ impl Table {
         table
     }
 
+    pub fn max_build(&self) -> usize {
+        let mut max: usize = 0;
+
+        for i in 0..NUM_COLS {
+            let len = self.blds[i as usize].len();
+            if len > max {
+                max = len;
+            }
+        }
+
+        max
+    }
     // Found(Suit),
     // Free(u8),
     // Builds(u8),

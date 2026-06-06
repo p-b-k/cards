@@ -36,15 +36,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialize deck and table
     let mut deck = Deck::new();
-
     for _ in 0..100 {
         deck.shuffle_once();
     }
+    let mut tableau = Tableau::new(&mut deck);
 
+    // Start setting up input mode and channels
     enable_raw_mode().expect("can run in raw mode");
-
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(200);
+
+    // Spawn the input loop
     thread::spawn(move || {
         let mut last_tick = Instant::now();
         loop {
@@ -66,13 +68,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    // Create the terminal
     let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let mut tableau = Tableau::new(&mut deck);
-
+    // Loop over the input and redraw the screen
     loop {
         terminal.draw(|rect| {
             let size = rect.size();
@@ -83,45 +85,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     [
                         Constraint::Length(32),
                         Constraint::Min(2),
-                        Constraint::Length(1),
-                        Constraint::Min(1),
+                        // Constraint::Length(1),
+                        // Constraint::Min(1),
                     ]
                     .as_ref(),
                 )
                 .split(size);
 
-            // let p = Paragraph::new("hello").block(Block::default());
-
-            // let menu = menu_titles
-            //     .iter()
-            //     .map(|t| {
-            //         let (first, rest) = t.split_at(1);
-            //         Spans::from(vec![
-            //             Span::styled(
-            //                 first,
-            //                 Style::default()
-            //                     .fg(Color::Yellow)
-            //                     .add_modifier(Modifier::UNDERLINED),
-            //             ),
-            //             Span::styled(rest, Style::default().fg(Color::White)),
-            //         ])
-            //     })
-            //     .collect();
-
-            // let tabs = Tabs::new(menu)
-            //     .block(Block::default().borders(Borders::NONE))
-            //     .style(Style::default().fg(Color::White))
-            //     .highlight_style(Style::default().fg(Color::Yellow))
-            //     .divider(Span::raw("|"));
-
-            // rect.render_widget(tabs, chunks[0]);
-            // let pets_chunks = Layout::default()
-            //     .direction(Direction::Horizontal)
-            //     .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
-            //     .split(chunks[1]);
-            // let (left, right) = render_pets(&deck);
-            // rect.render_stateful_widget(left, pets_chunks[0], &mut pet_list_state);
-            // rect.render_widget(right, pets_chunks[1]);
             let tab_widget = TableauWidget {};
             rect.render_stateful_widget(tab_widget, chunks[1], &mut tableau);
         })?;
@@ -170,73 +140,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-// fn render_pets<'a>(tableau: &Tableau) {
-//     let pets = Block::default()
-//         .borders(Borders::ALL)
-//         .style(Style::default().fg(Color::White))
-//         .title("Pets")
-//         .border_type(BorderType::Plain);
-
-//     let selected_pet = pet_list
-//         .get(
-//             pet_list_state
-//                 .selected()
-//                 .expect("there is always a selected pet"),
-//         )
-//         .expect("exists")
-//         .clone();
-
-//     let list = List::new(items).block(pets).highlight_style(
-//         Style::default()
-//             .bg(Color::Yellow)
-//             .fg(Color::Black)
-//             .add_modifier(Modifier::BOLD),
-//     );
-
-//     let pet_detail = Table::new(vec![Row::new(vec![
-//         Cell::from(Span::raw(selected_pet.id.to_string())),
-//         Cell::from(Span::raw(selected_pet.name)),
-//         Cell::from(Span::raw(selected_pet.category)),
-//         Cell::from(Span::raw(selected_pet.age.to_string())),
-//         Cell::from(Span::raw(selected_pet.created_at.to_string())),
-//     ])])
-//     .header(Row::new(vec![
-//         Cell::from(Span::styled(
-//             "ID",
-//             Style::default().add_modifier(Modifier::BOLD),
-//         )),
-//         Cell::from(Span::styled(
-//             "Name",
-//             Style::default().add_modifier(Modifier::BOLD),
-//         )),
-//         Cell::from(Span::styled(
-//             "Category",
-//             Style::default().add_modifier(Modifier::BOLD),
-//         )),
-//         Cell::from(Span::styled(
-//             "Age",
-//             Style::default().add_modifier(Modifier::BOLD),
-//         )),
-//         Cell::from(Span::styled(
-//             "Created At",
-//             Style::default().add_modifier(Modifier::BOLD),
-//         )),
-//     ]))
-//     .block(
-//         Block::default()
-//             .borders(Borders::ALL)
-//             .style(Style::default().fg(Color::White))
-//             .title("Detail")
-//             .border_type(BorderType::Plain),
-//     )
-//     .widths(&[
-//         Constraint::Percentage(5),
-//         Constraint::Percentage(20),
-//         Constraint::Percentage(20),
-//         Constraint::Percentage(5),
-//         Constraint::Percentage(20),
-//     ]);
-
-//     (list, pet_detail)
-// }
