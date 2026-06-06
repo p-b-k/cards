@@ -13,9 +13,6 @@ use tui::{
     Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, Borders, Paragraph, Tabs},
 };
 
 use crossterm::{
@@ -25,7 +22,6 @@ use crossterm::{
 
 use seahaven::{
     deck::Deck,
-    game::Table as GTable,
     tui::tableau::{Tableau, TableauWidget},
 };
 
@@ -35,14 +31,15 @@ enum Event<I> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize logging
+    env_logger::init();
+
     // Initialize deck and table
     let mut deck = Deck::new();
 
     for _ in 0..100 {
         deck.shuffle_once();
     }
-
-    let t = GTable::from(&mut deck);
 
     enable_raw_mode().expect("can run in raw mode");
 
@@ -74,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let menu_titles = vec!["New", "Retire", "Retire All", "Build", "Undo", "Quit"];
+    let mut tableau = Tableau::new(&mut deck);
 
     loop {
         terminal.draw(|rect| {
@@ -94,8 +91,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .split(size);
 
             // let p = Paragraph::new("hello").block(Block::default());
-
-            let mut tableau = Tableau::new(&mut deck);
 
             // let menu = menu_titles
             //     .iter()

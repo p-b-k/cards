@@ -6,14 +6,14 @@ use log::error;
 use tui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Modifier},
+    style::{Color, Modifier, Style},
     widgets::StatefulWidget,
 };
 
 use crate::{
-    cards::{Card, Rank, Suit},
+    cards::{Card, NUM_SUITS, Rank, Suit},
     deck::Deck,
-    game::{NUM_FREE, Table},
+    game::{NUM_COLS, NUM_FREE, Table},
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -30,11 +30,11 @@ pub struct Tableau {
 
 impl Tableau {
     pub fn new(deck: &mut Deck) -> Tableau {
-        let mut deck = Deck::new();
+        // let mut deck = Deck::new();
 
         Tableau {
             mode: Mode::Build(5),
-            tab: Table::from(&mut deck),
+            tab: Table::from(deck),
         }
     }
 }
@@ -58,6 +58,18 @@ impl StatefulWidget for TableauWidget {
     type State = Tableau;
 
     fn render(self, area: Rect, buff: &mut Buffer, state: &mut Self::State) {
+        // Set bg
+        let default_style = Style::default()
+            .bg(Color::Rgb(0, 43, 0))
+            .fg(Color::Rgb(0xf0, 0xe4, 0))
+            .add_modifier(Modifier::BOLD);
+
+        for r in 0..area.height {
+            for c in 0..(BOARD_MARGIN_LEFT + (NUM_COLS * CARD_SPAN) + BOARD_MARGIN_RIGHT) {
+                buff.get_mut(c, r).set_style(default_style);
+            }
+        }
+
         match draw_free_cells(area, buff, state) {
             DrawResult::Err(s) => {
                 error!("Error: {s}");
@@ -172,9 +184,26 @@ fn draw_free_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawRe
 
         draw_card_at(buff, &state.tab.free[i as usize], row, col, "[ ]");
     }
-    DrawResult::Err("draw_free_cells: Not Implemented".to_string())
+    DrawResult::Ok
 }
 fn draw_found_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {
+    for s in 0..NUM_SUITS {
+        let cnt = if s < 2 { 0 } else { 6 };
+        let row = BOARD_MARGIN_TOP + 1;
+        let col = BOARD_MARGIN_LEFT + ((s + cnt) * CARD_SPAN);
+
+        if state.tab.found[s as usize] > 0 {
+            let c = Card::from_index(state.tab.found[s as usize] - 1)
+                .expect("Unable to get card from index");
+            draw_card_at(buff, &Some(c), row, col, "***");
+        } else {
+            buff.get_mut(col, row).set_char('[');
+            buff.get_mut(col + 1, row)
+                .set_char(Suit::from_index(s as u8).unwrap().as_char());
+            buff.get_mut(col + 2, row).set_char(']');
+        }
+    }
+
     DrawResult::Err("draw_found_cells: Not Implemented".to_string())
 }
 fn draw_build_cells(area: Rect, buff: &mut Buffer, state: &mut Tableau) -> DrawResult {

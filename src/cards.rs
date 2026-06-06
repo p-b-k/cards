@@ -16,9 +16,9 @@ use ansi_term::{
     Style,
 };
 
-pub const NUM_SUITS: u8 = 4;
-pub const NUM_RANKS: u8 = 13;
-pub const NUM_CARDS: u8 = NUM_SUITS * NUM_RANKS;
+pub const NUM_SUITS: u16 = 4;
+pub const NUM_RANKS: u16 = 13;
+pub const NUM_CARDS: u16 = NUM_SUITS * NUM_RANKS;
 
 const LTE: &str = "\u{2264}";
 const LT: &str = "<";
@@ -176,8 +176,8 @@ impl Card {
 
     pub fn from_index(i: u8) -> Result<Card, String> {
         if i < 52 {
-            let suit = Suit::from_index(i / NUM_RANKS).unwrap();
-            let rank = Rank::from_index(i % NUM_RANKS).unwrap();
+            let suit = Suit::from_index(i / NUM_RANKS as u8).unwrap();
+            let rank = Rank::from_index(i % NUM_RANKS as u8).unwrap();
             Ok(Card { suit, rank })
         } else {
             Err(format!(

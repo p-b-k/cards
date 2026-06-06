@@ -2,6 +2,8 @@
 // Create the data structures for the seahaven game
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+use log::debug;
+
 use crate::{
     cards::{Card, NUM_CARDS, NUM_SUITS, Rank, Suit},
     deck::Deck,
@@ -12,9 +14,9 @@ pub struct Stack {
     pub cards: Vec<Card>,
 }
 
-pub const NUM_FREE: u8 = 4;
-pub const NUM_COLS: u8 = 10;
-pub const NUM_ROWS: u8 = NUM_CARDS / NUM_COLS;
+pub const NUM_FREE: u16 = 4;
+pub const NUM_COLS: u16 = 10;
+pub const NUM_ROWS: u16 = NUM_CARDS / NUM_COLS;
 
 #[derive(Clone, Debug)]
 pub struct Table {
@@ -49,7 +51,7 @@ impl Table {
             ],
         };
 
-        for _ in 0..NUM_ROWS {
+        for r in 0..NUM_ROWS {
             for c in 0..NUM_COLS {
                 table.blds[c as usize].push(deck.deal().unwrap());
             }

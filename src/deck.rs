@@ -6,10 +6,11 @@ use rand::{self, random_bool};
 
 use crate::cards::{Card, NUM_CARDS};
 
-const HALF_DECK: u8 = NUM_CARDS / 2;
+const HALF_DECK: u16 = NUM_CARDS / 2;
 
+#[derive(Clone)]
 pub struct Deck {
-    pub next: u8,
+    pub next: u16,
     pub cards: [u8; NUM_CARDS as usize],
 }
 
