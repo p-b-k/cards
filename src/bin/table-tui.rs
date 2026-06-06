@@ -9,6 +9,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use log::{info, warn};
 use tui::{
     Terminal,
     backend::CrosstermBackend,
@@ -22,7 +23,7 @@ use crossterm::{
 
 use seahaven::{
     deck::Deck,
-    game::{NUM_COLS, NUM_FREE},
+    game::{Location, NUM_COLS, NUM_FREE},
     tui::tableau::{Mode, Tableau, TableauWidget},
 };
 
@@ -152,33 +153,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
 
                 KeyCode::Char(' ') => tableau.tab.retire_all(),
-                // KeyCode::Char('p') => active_menu_item = MenuItem::Pets,
-                // KeyCode::Char('a') => {
-                //     add_random_pet_to_db().expect("can add new random pet");
-                // }
-                // KeyCode::Char('d') => {
-                //     remove_pet_at_index(&mut pet_list_state).expect("can remove pet");
-                // }
-                // KeyCode::Down => {
-                //     if let Some(selected) = pet_list_state.selected() {
-                //         let amount_pets = read_db().expect("can fetch pet list").len();
-                //         if selected >= amount_pets - 1 {
-                //             pet_list_state.select(Some(0));
-                //         } else {
-                //             pet_list_state.select(Some(selected + 1));
-                //         }
-                //     }
-                // }
-                // KeyCode::Up => {
-                //     if let Some(selected) = pet_list_state.selected() {
-                //         let amount_pets = read_db().expect("can fetch pet list").len();
-                //         if selected > 0 {
-                //             pet_list_state.select(Some(selected - 1));
-                //         } else {
-                //             pet_list_state.select(Some(amount_pets - 1));
-                //         }
-                //     }
-                // }
+
+                KeyCode::Char('u') => match tableau.mode {
+                    Mode::Free(_) => {}
+                    Mode::Build(i) => match tableau.tab.next_free() {
+                        Some(f) => {
+                            tableau
+                                .tab
+                                .move_card(Location::Builds(i), Location::Free(f));
+                        }
+                        None => {
+                            info!("No available free slots");
+                        }
+                    },
+                },
+
+                KeyCode::Enter => match tableau.mode {
+                    Mode::Free(i) => match &tableau.tab.free[i as usize] {
+                        None => {
+                            warn!("No card in fee cell {i}");
+                        }
+                        Some(c) => match tableau.tab.find_build_home(&c) {
+                            Some(j) => {
+                                tableau
+                                    .tab
+                                    .move_card(Location::Free(i as u8), Location::Builds(j as u8));
+                            }
+                            None => {
+                                warn!("No build column to move {c:?} to");
+                            }
+                        },
+                    },
+                    Mode::Build(i) => match tableau.tab.next_free() {
+                        Some(f) => {
+                            tableau
+                                .tab
+                                .move_card(Location::Builds(i), Location::Free(f));
+                        }
+                        None => {
+                            info!("No available free slots");
+                        }
+                    },
+                },
+
                 _ => {}
             },
             Event::Tick => {}

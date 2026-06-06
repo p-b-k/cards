@@ -223,8 +223,6 @@ fn draw_found_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> Draw
         let col = BOARD_MARGIN_LEFT + ((s + cnt) * CARD_SPAN);
 
         if state.tab.found[s as usize] > 0 {
-            // let c = Card::from_index(state.tab.found[s as usize] - 1)
-            //     .expect("Unable to get card from index");
             let c = Card {
                 rank: Rank::from_index(state.tab.found[s as usize] - 1).unwrap(),
                 suit: Suit::from_index(s as u8).unwrap(),

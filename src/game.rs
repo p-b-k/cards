@@ -2,7 +2,7 @@
 // Create the data structures for the seahaven game
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-use log::error;
+use log::{debug, error};
 
 use crate::{
     cards::{Card, NUM_CARDS, NUM_SUITS, Rank, Suit},
@@ -185,28 +185,25 @@ impl Table {
                     }
                 }
             },
-            (Location::Free(n), Location::Found(s)) => {
-                // Some(format!("TODO: Implement move from free cell to foundation"))
-                match self.free[n as usize].clone() {
-                    Some(card) => {
-                        if card.suit == s {
-                            if card.rank.index() == self.found[s.index() as usize] {
-                                Some(format!(
-                                    "Card (top:?) does not have the correct rank to be moved to the foundation ({:?})",
-                                    Rank::from_index(self.found[s.index() as usize])
-                                ))
-                            } else {
-                                self.found[s.index() as usize] = self.found[s.index() as usize] + 1;
-                                self.free[n as usize] = None;
-                                None
-                            }
+            (Location::Free(n), Location::Found(s)) => match self.free[n as usize].clone() {
+                Some(card) => {
+                    if card.suit == s {
+                        if card.rank.index() == self.found[s.index() as usize] {
+                            self.found[s.index() as usize] = self.found[s.index() as usize] + 1;
+                            self.free[n as usize] = None;
+                            None
                         } else {
-                            Some("Card (top:?) does not match foundation suite (s:?)".to_string())
+                            Some(format!(
+                                "Card (top:?) does not have the correct rank to be moved to the foundation ({:?})",
+                                Rank::from_index(self.found[s.index() as usize])
+                            ))
                         }
+                    } else {
+                        Some("Card (top:?) does not match foundation suite (s:?)".to_string())
                     }
-                    None => Some(format!("Cannot move from empty Free Cell")),
                 }
-            }
+                None => Some(format!("Cannot move from empty Free Cell")),
+            },
             _ => Some("Unknown Move".to_string()),
         }
     }
@@ -348,5 +345,35 @@ impl Table {
                 }
             }
         }
+    }
+
+    pub fn next_free(&self) -> Option<u8> {
+        for i in 0..NUM_FREE {
+            if self.free[i as usize] == None {
+                return Some(i as u8);
+            }
+        }
+
+        None
+    }
+
+    pub fn find_build_home(&self, card: &Card) -> Option<usize> {
+        for i in 0..NUM_COLS {
+            let column = self.blds[i as usize].clone();
+            if column.is_empty() {
+                if card.rank == Rank::King {
+                    return Some(i as usize);
+                }
+            } else {
+                let top = column.len() - 1;
+                if column[top].suit == card.suit
+                    && column[top].rank.index() == card.rank.index() + 1
+                {
+                    return Some(i as usize);
+                }
+            }
+        }
+
+        None
     }
 }
