@@ -2,6 +2,8 @@
 // Create the data structures for the seahaven game
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+use log::error;
+
 use crate::{
     cards::{Card, NUM_CARDS, NUM_SUITS, Rank, Suit},
     deck::Deck,
@@ -295,6 +297,56 @@ impl Table {
             println!();
 
             current_row = current_row + 1;
+        }
+    }
+
+    pub fn retire_all(&mut self) {
+        let mut done = false;
+
+        while !done {
+            done = true;
+
+            for i in 0..NUM_FREE {
+                let col = &self.free[i as usize].clone();
+                match col {
+                    Some(c) => {
+                        let suit_idx = c.suit.index();
+                        if &self.found[suit_idx as usize] == &c.rank.index() {
+                            match self
+                                .move_card(Location::Free(i as u8), Location::Found(c.suit.clone()))
+                            {
+                                Some(msg) => {
+                                    error!("Error retiring: {c} : {msg}");
+                                }
+                                None => {
+                                    done = false;
+                                }
+                            }
+                        }
+                    }
+                    None => {}
+                }
+            }
+
+            for i in 0..NUM_COLS {
+                if !self.blds[i as usize].is_empty() {
+                    let top = self.blds[i as usize].len() - 1;
+                    let c = &self.blds[i as usize][top].clone();
+                    let suit_idx = c.suit.index();
+                    if &self.found[suit_idx as usize] == &c.rank.index() {
+                        match self
+                            .move_card(Location::Builds(i as u8), Location::Found(c.suit.clone()))
+                        {
+                            Some(msg) => {
+                                error!("Error retiring: {c} : {msg}");
+                            }
+                            None => {
+                                done = false;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

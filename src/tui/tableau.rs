@@ -90,7 +90,7 @@ impl StatefulWidget for TableauWidget {
     type State = Tableau;
 
     fn render(self, area: Rect, buff: &mut Buffer, state: &mut Self::State) {
-        debug!("Render: Mode = {:?}", state.mode);
+        // debug!("Render: Mode = {:?}", state.mode);
         // Set bg
         let default_style = Style::default()
             .bg(bg_color())
@@ -140,14 +140,6 @@ impl StatefulWidget for TableauWidget {
         };
 
         match draw_free_border_cells(area, buff, state) {
-            DrawResult::Err(s) => {
-                error!("Error: {s}");
-                // panic!("Unable to draw free cells");
-            }
-            DrawResult::Ok => {}
-        };
-
-        match draw_table_border_cells(area, buff, state) {
             DrawResult::Err(s) => {
                 error!("Error: {s}");
                 // panic!("Unable to draw free cells");
@@ -231,8 +223,12 @@ fn draw_found_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> Draw
         let col = BOARD_MARGIN_LEFT + ((s + cnt) * CARD_SPAN);
 
         if state.tab.found[s as usize] > 0 {
-            let c = Card::from_index(state.tab.found[s as usize] - 1)
-                .expect("Unable to get card from index");
+            // let c = Card::from_index(state.tab.found[s as usize] - 1)
+            //     .expect("Unable to get card from index");
+            let c = Card {
+                rank: Rank::from_index(state.tab.found[s as usize] - 1).unwrap(),
+                suit: Suit::from_index(s as u8).unwrap(),
+            };
             draw_card_at(buff, &Some(c), row, col, "***");
         } else {
             let suit = Suit::from_index(s as u8).unwrap();
@@ -293,7 +289,6 @@ fn draw_hrule_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -> Draw
 
     match cursor {
         Some(i) => {
-            debug!("Builders: Cursor = {i}");
             let style = Style::default().fg(cr_color());
             buff.get_mut(BOARD_MARGIN_LEFT + (i * CARD_SPAN), row)
                 .set_char(BOARD_INDICATOR_CHARS[0]);
@@ -338,7 +333,6 @@ fn draw_free_border_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -
 
     match cursor {
         Some(i) => {
-            debug!("Free: Cursor = {i}");
             let style = Style::default().fg(cr_color());
 
             buff.get_mut(BOARD_MARGIN_LEFT + (3 * CARD_SPAN) + (i * CARD_SPAN), row)
@@ -370,8 +364,4 @@ fn draw_free_border_cells(_area: Rect, buff: &mut Buffer, state: &mut Tableau) -
     }
 
     DrawResult::Ok
-}
-
-fn draw_table_border_cells(_area: Rect, _buff: &mut Buffer, _state: &mut Tableau) -> DrawResult {
-    DrawResult::Err("draw_table_border_cells: Not Implemented".to_string())
 }

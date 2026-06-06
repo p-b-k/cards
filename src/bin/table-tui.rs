@@ -151,6 +151,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     _ => {}
                 },
 
+                KeyCode::Char(' ') => tableau.tab.retire_all(),
                 // KeyCode::Char('p') => active_menu_item = MenuItem::Pets,
                 // KeyCode::Char('a') => {
                 //     add_random_pet_to_db().expect("can add new random pet");
