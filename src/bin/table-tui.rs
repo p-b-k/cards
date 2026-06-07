@@ -184,12 +184,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         },
                     },
-                    Mode::Build(i) => match tableau.tab.next_free() {
-                        Some(f) => {
-                            tableau
-                                .tab
-                                .move_card(Location::Builds(i), Location::Free(f));
-                        }
+                    Mode::Build(i) => match tableau.tab.top_card(i) {
+                        Some(c) => match tableau.tab.find_build_home(&c) {
+                            Some(j) => {
+                                tableau.tab.move_card(
+                                    Location::Builds(i as u8),
+                                    Location::Builds(j as u8),
+                                );
+                            }
+                            None => {
+                                warn!("No build column to move {c:?} to");
+                            }
+                        },
                         None => {
                             info!("No available free slots");
                         }

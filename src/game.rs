@@ -376,4 +376,13 @@ impl Table {
 
         None
     }
+
+    pub fn top_card(&self, col: u8) -> Option<Card> {
+        let top = self.blds[col as usize].len();
+        if top == 0 {
+            None
+        } else {
+            Some(self.blds[col as usize][top as usize - 1].clone())
+        }
+    }
 }
